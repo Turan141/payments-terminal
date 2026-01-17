@@ -65,14 +65,19 @@ export default function MerchantPage() {
 									>
 										Payment Receiver
 									</label>
-									<input
-										id='recipient'
-										type='text'
-										value={recipient}
-										onChange={(e) => setRecipient(e.target.value)}
-										placeholder='Business Name'
-										className='w-full px-4 py-3 text-xl font-bold text-gray-800 bg-gray-50 border-2 border-gray-100 rounded-xl focus:border-blue-500 outline-none transition-all text-center mb-6'
-									/>
+									<div className='relative mb-6'>
+										<div className='absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600 font-bold'>
+											{recipient ? recipient.charAt(0).toUpperCase() : "?"}
+										</div>
+										<input
+											id='recipient'
+											type='text'
+											value={recipient}
+											onChange={(e) => setRecipient(e.target.value)}
+											placeholder='Business Name'
+											className='w-full pl-16 pr-4 py-4 text-xl font-bold text-gray-800 bg-white border border-gray-200 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all placeholder:text-gray-300'
+										/>
+									</div>
 
 									<label
 										htmlFor='amount'
@@ -159,16 +164,20 @@ export default function MerchantPage() {
 								</div>
 
 								<div
-									className='bg-white p-6 rounded-3xl shadow-inner border border-gray-100 cursor-pointer hover:shadow-lg transition-shadow duration-300'
+									className='bg-white p-6 rounded-3xl shadow-xl border border-gray-100 cursor-pointer hover:scale-105 transition-transform duration-300 relative group'
 									onClick={() => window.open(qrValue, "_blank")}
 									title='Click to simulate scan'
 								>
+									<div className='absolute inset-0 rounded-3xl border-2 border-dashed border-blue-200 group-hover:border-blue-500 transition-colors pointer-events-none' />
 									<QRCodeSVG
 										value={qrValue}
 										size={220}
 										level='H'
-										className='w-full h-auto'
+										className='w-full h-auto relative z-10'
 									/>
+									<div className='absolute -bottom-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg whitespace-nowrap z-20'>
+										Scan to Pay
+									</div>
 								</div>
 
 								<p className='text-gray-400 text-sm text-center font-medium max-w-[200px] leading-relaxed'>

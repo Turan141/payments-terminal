@@ -66,31 +66,61 @@ function StatusContent() {
 			{isSuccess && (
 				<>
 					<p className='text-gray-500 mb-8'>Your transaction has been processed.</p>
-					<div className='bg-gray-50 rounded-2xl p-6 w-full mb-8 border border-gray-100'>
-						<div className='flex items-center gap-3 mb-6 bg-white p-3 rounded-xl border border-gray-100 shadow-sm'>
-							<div className='w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold'>
+					<div className='relative bg-gray-50 rounded-2xl p-6 w-full mb-8 border border-gray-100 overflow-hidden'>
+						{/* Jagged edge bottom effect (simulated with CSS background or just a border style) */}
+						<div
+							className='absolute bottom-0 left-0 right-0 h-4 bg-white'
+							style={{
+								maskImage:
+									"linear-gradient(45deg, transparent 33.33%, #000 33.33%, #000 66.66%, transparent 66.66%), linear-gradient(-45deg, transparent 33.33%, #000 33.33%, #000 66.66%, transparent 66.66%)",
+								maskSize: "20px 40px",
+								WebkitMaskImage:
+									"linear-gradient(45deg, transparent 33.33%, #000 33.33%, #000 66.66%, transparent 66.66%), linear-gradient(-45deg, transparent 33.33%, #000 33.33%, #000 66.66%, transparent 66.66%)",
+								WebkitMaskSize: "20px 20px",
+								transform: "rotate(180deg)"
+							}}
+						/>
+
+						<div className='flex items-center gap-4 mb-6 pb-6 border-b border-dashed border-gray-300'>
+							<div className='w-12 h-12 bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-blue-500/30'>
 								{(recipient || "Merchant").charAt(0).toUpperCase()}
 							</div>
-							<div className='text-left'>
-								<p className='text-xs text-gray-400 font-bold uppercase tracking-wider'>
+							<div className='text-left flex-1'>
+								<p className='text-[10px] text-gray-400 font-bold uppercase tracking-widest'>
 									Paid to
 								</p>
-								<p className='text-gray-900 font-bold'>{recipient || "Merchant"}</p>
+								<p className='text-lg font-bold text-gray-900 leading-tight'>
+									{recipient || "Merchant"}
+								</p>
 							</div>
 						</div>
 
-						<p className='text-gray-400 text-xs font-bold uppercase tracking-wider mb-1'>
-							Amount Paid
-						</p>
-						<p className='text-4xl font-bold text-gray-900 tracking-tight'>${amount}</p>
-						<div className='w-full h-px bg-gray-200 my-4' />
-						<div className='flex justify-between text-sm'>
-							<span className='text-gray-500'>Ref Number</span>
-							<span className='font-mono text-gray-800'>{txnRef}</span>
+						<div className='space-y-1 mb-6'>
+							<p className='text-gray-400 text-xs font-bold uppercase tracking-wider'>
+								Total Amount
+							</p>
+							<p className='text-5xl font-bold text-gray-900 tracking-tighter'>
+								${amount}
+							</p>
 						</div>
-						<div className='flex justify-between text-sm mt-2'>
-							<span className='text-gray-500'>Date</span>
-							<span className='text-gray-800'>{new Date().toLocaleDateString()}</span>
+
+						<div className='space-y-3 pt-2 text-sm'>
+							<div className='flex justify-between items-center'>
+								<span className='text-gray-500 font-medium'>Ref Number</span>
+								<span className='font-mono text-gray-700 bg-gray-200/50 px-2 py-1 rounded'>
+									{txnRef}
+								</span>
+							</div>
+							<div className='flex justify-between items-center'>
+								<span className='text-gray-500 font-medium'>Details</span>
+								<span className='text-gray-800 font-medium'>Visa •••• 4242</span>
+							</div>
+							<div className='flex justify-between items-center'>
+								<span className='text-gray-500 font-medium'>Date</span>
+								<span className='text-gray-800 font-medium'>
+									{new Date().toLocaleString()}
+								</span>
+							</div>
 						</div>
 					</div>
 				</>
