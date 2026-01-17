@@ -19,6 +19,7 @@ function PayContent() {
 	const amount = searchParams.get("amount") || "0.00"
 	const [isProcessing, setIsProcessing] = useState(false)
 	const [showScanModal, setShowScanModal] = useState(false)
+	const [scanError, setScanError] = useState<string | null>(null)
 	const fileInputRef = useRef<HTMLInputElement>(null)
 	const galleryInputRef = useRef<HTMLInputElement>(null)
 
@@ -56,11 +57,16 @@ function PayContent() {
 		if (!file) return
 
 		setIsProcessing(true)
+		setScanError(null)
 		try {
 			const reader = new FileReader()
 			reader.onloadend = async () => {
 				const base64 = reader.result?.toString()
-				if (!base64) return
+				if (!base64) {
+					setScanError("Failed to read file")
+					setIsProcessing(false)
+					return
+				}
 
 				try {
 					const res = await fetch("https://demo.vibo.tips/api/terminal/bill/recognize", {
@@ -75,9 +81,15 @@ function PayContent() {
 							model: "gemini"
 						})
 					})
-					const { data } = await res.json()
 
-					if (data?.card) {
+					if (!res.ok) {
+						throw new Error(`API error: ${res.status}`)
+					}
+
+					const { data } = await res.json()
+					console.log("Scan result:", data)
+
+					if (data?.card?.number) {
 						setFormData((prev) => ({
 							...prev,
 							cardNumber: data.card.number
@@ -85,15 +97,21 @@ function PayContent() {
 								: prev.cardNumber,
 							expiry: data.card.expDate ? formatExpiry(data.card.expDate) : prev.expiry
 						}))
+						setShowScanModal(false)
+					} else {
+						setScanError("Could not recognize card details. Please try again.")
 					}
 				} catch (err) {
 					console.error("Scan error", err)
+					setScanError("Failed to process image. Please try again.")
 				} finally {
 					setIsProcessing(false)
 				}
 			}
 			reader.readAsDataURL(file)
 		} catch (error) {
+			console.error("File reading error", error)
+			setScanError("Failed to load image")
 			setIsProcessing(false)
 		}
 	}
@@ -265,7 +283,6 @@ function PayContent() {
 						onChange={handleScan}
 					/>
 
-
 					<button
 						type='button'
 						onClick={() => setShowScanModal(true)}
@@ -274,6 +291,16 @@ function PayContent() {
 						<Camera className='w-5 h-5' />
 						Scan Card
 					</button>
+
+					{scanError && (
+						<motion.div
+							initial={{ opacity: 0, y: -10 }}
+							animate={{ opacity: 1, y: 0 }}
+							className='bg-red-50 text-red-500 text-sm font-medium px-4 py-3 rounded-xl border border-red-100 flex items-center justify-center text-center'
+						>
+							{scanError}
+						</motion.div>
+					)}
 
 					<AnimatePresence>
 						{showScanModal && (
