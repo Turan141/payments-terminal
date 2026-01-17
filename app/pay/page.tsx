@@ -2,14 +2,23 @@
 
 import { Suspense, useState, useRef } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { CreditCard, Calendar, Lock, ArrowRight, Camera, Image as ImageIcon } from "lucide-react"
-import { motion } from "framer-motion"
+import {
+	CreditCard,
+	Calendar,
+	Lock,
+	ArrowRight,
+	Camera,
+	Image as ImageIcon,
+	X
+} from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
 
 function PayContent() {
 	const searchParams = useSearchParams()
 	const router = useRouter()
 	const amount = searchParams.get("amount") || "0.00"
 	const [isProcessing, setIsProcessing] = useState(false)
+	const [showScanModal, setShowScanModal] = useState(false)
 	const fileInputRef = useRef<HTMLInputElement>(null)
 	const galleryInputRef = useRef<HTMLInputElement>(null)
 
@@ -256,24 +265,69 @@ function PayContent() {
 						onChange={handleScan}
 					/>
 
-					<div className='grid grid-cols-2 gap-3'>
-						<button
-							type='button'
-							onClick={() => fileInputRef.current?.click()}
-							className='flex(1) flex items-center justify-center gap-2 bg-blue-50 text-blue-600 font-bold py-3 rounded-xl hover:bg-blue-100 transition-colors border border-blue-100'
-						>
-							<Camera className='w-5 h-5' />
-							Camera
-						</button>
-						<button
-							type='button'
-							onClick={() => galleryInputRef.current?.click()}
-							className='flex(1) flex items-center justify-center gap-2 bg-gray-50 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-100 transition-colors border border-gray-200'
-						>
-							<ImageIcon className='w-5 h-5' />
-							Gallery
-						</button>
-					</div>
+
+					<button
+						type='button'
+						onClick={() => setShowScanModal(true)}
+						className='w-full flex items-center justify-center gap-2 bg-blue-50 text-blue-600 font-bold py-3 rounded-xl hover:bg-blue-100 transition-colors border border-blue-100'
+					>
+						<Camera className='w-5 h-5' />
+						Scan Card
+					</button>
+
+					<AnimatePresence>
+						{showScanModal && (
+							<div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm'>
+								<motion.div
+									initial={{ opacity: 0, scale: 0.95 }}
+									animate={{ opacity: 1, scale: 1 }}
+									exit={{ opacity: 0, scale: 0.95 }}
+									className='bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl relative'
+								>
+									<button
+										onClick={() => setShowScanModal(false)}
+										className='absolute right-4 top-4 text-gray-400 hover:text-gray-600'
+									>
+										<X className='w-6 h-6' />
+									</button>
+
+									<h3 className='text-xl font-bold text-gray-900 mb-6 text-center'>
+										Choose option
+									</h3>
+
+									<div className='grid grid-cols-2 gap-4'>
+										<button
+											type='button'
+											onClick={() => {
+												setShowScanModal(false)
+												fileInputRef.current?.click()
+											}}
+											className='flex flex-col items-center gap-3 p-6 rounded-2xl bg-blue-50 hover:bg-blue-100 transition-colors border border-blue-100 group'
+										>
+											<div className='w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm text-blue-600 group-hover:scale-110 transition-transform'>
+												<Camera className='w-6 h-6' />
+											</div>
+											<span className='font-bold text-blue-900'>Camera</span>
+										</button>
+
+										<button
+											type='button'
+											onClick={() => {
+												setShowScanModal(false)
+												galleryInputRef.current?.click()
+											}}
+											className='flex flex-col items-center gap-3 p-6 rounded-2xl bg-gray-50 hover:bg-gray-100 transition-colors border border-gray-200 group'
+										>
+											<div className='w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm text-gray-600 group-hover:scale-110 transition-transform'>
+												<ImageIcon className='w-6 h-6' />
+											</div>
+											<span className='font-bold text-gray-900'>Gallery</span>
+										</button>
+									</div>
+								</motion.div>
+							</div>
+						)}
+					</AnimatePresence>
 
 					<div className='space-y-2'>
 						<div className='flex justify-between'>
