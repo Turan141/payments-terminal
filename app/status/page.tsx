@@ -142,7 +142,7 @@ function StatusContent() {
 			</div>
 
 			<Link
-				href='/'
+				href='https://demo.vibo.tips'
 				className='mt-8 text-sm text-gray-400 font-medium hover:text-gray-600 transition-colors'
 			>
 				Return to Merchant
