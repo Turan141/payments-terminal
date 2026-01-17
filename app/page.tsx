@@ -9,7 +9,7 @@ export default function MerchantPage() {
 	const [cents, setCents] = useState(0)
 	const [qrValue, setQrValue] = useState<string | null>(null)
 	const [origin, setOrigin] = useState("")
-	const [recipient, setRecipient] = useState("Vibo Place")
+	const recipient = "Vibo Place"
 
 	const amount = (cents / 100).toFixed(2)
 
@@ -59,24 +59,13 @@ export default function MerchantPage() {
 								className='w-full flex flex-col gap-8'
 							>
 								<div className='text-center'>
-									<label
-										htmlFor='recipient'
-										className='block text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2'
-									>
-										Payment Receiver
-									</label>
-									<div className='relative mb-6'>
-										<div className='absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600 font-bold'>
-											{recipient ? recipient.charAt(0).toUpperCase() : "?"}
+									<div className='flex items-center justify-center gap-2 mb-8 bg-blue-50 py-3 rounded-xl border border-blue-100'>
+										<div className='w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-md'>
+											V
 										</div>
-										<input
-											id='recipient'
-											type='text'
-											value={recipient}
-											onChange={(e) => setRecipient(e.target.value)}
-											placeholder='Business Name'
-											className='w-full pl-16 pr-4 py-4 text-xl font-bold text-gray-800 bg-white border border-gray-200 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all placeholder:text-gray-300'
-										/>
+										<span className='font-bold text-lg text-gray-800 tracking-tight'>
+											Vibo Place
+										</span>
 									</div>
 
 									<label

@@ -19,10 +19,8 @@ function PayContent() {
 	const amount = searchParams.get("amount") || "0.00"
 	const recipient = searchParams.get("recipient") || "Merchant"
 	const [isProcessing, setIsProcessing] = useState(false)
-	const [showScanModal, setShowScanModal] = useState(false)
 	const [scanError, setScanError] = useState<string | null>(null)
 	const fileInputRef = useRef<HTMLInputElement>(null)
-	const galleryInputRef = useRef<HTMLInputElement>(null)
 
 	const [formData, setFormData] = useState({
 		cardNumber: "",
@@ -98,7 +96,6 @@ function PayContent() {
 								: prev.cardNumber,
 							expiry: data.card.expDate ? formatExpiry(data.card.expDate) : prev.expiry
 						}))
-						setShowScanModal(false)
 					} else {
 						setScanError("Could not recognize card details. Please try again.")
 					}
@@ -285,7 +282,7 @@ function PayContent() {
 				</div>
 
 				<div className='space-y-4'>
-					{/* Camera Input */}
+					{/* Hidden Camera Input */}
 					<input
 						type='file'
 						ref={fileInputRef}
@@ -294,23 +291,6 @@ function PayContent() {
 						capture='environment'
 						onChange={handleScan}
 					/>
-					{/* Gallery Input */}
-					<input
-						type='file'
-						ref={galleryInputRef}
-						className='hidden'
-						accept='image/*'
-						onChange={handleScan}
-					/>
-
-					<button
-						type='button'
-						onClick={() => setShowScanModal(true)}
-						className='w-full flex items-center justify-center gap-2 bg-blue-50 text-blue-600 font-bold py-3 rounded-xl hover:bg-blue-100 transition-colors border border-blue-100'
-					>
-						<Camera className='w-5 h-5' />
-						Scan Card
-					</button>
 
 					{scanError && (
 						<motion.div
@@ -321,73 +301,6 @@ function PayContent() {
 							{scanError}
 						</motion.div>
 					)}
-
-					<AnimatePresence>
-						{showScanModal && (
-							<div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md'>
-								<motion.div
-									initial={{ opacity: 0, scale: 0.95 }}
-									animate={{ opacity: 1, scale: 1 }}
-									exit={{ opacity: 0, scale: 0.95 }}
-									className='bg-white w-full max-w-sm rounded-[2rem] overflow-hidden shadow-2xl relative'
-								>
-									<div className='relative h-64 bg-gray-900 flex items-center justify-center overflow-hidden'>
-										<div className='absolute inset-0 opacity-20 bg-[url("https://grainy-gradients.vercel.app/noise.svg")]'></div>
-										<motion.div
-											animate={{ top: ["10%", "90%", "10%"] }}
-											transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-											className='absolute left-0 right-0 h-0.5 bg-green-400 shadow-[0_0_20px_rgba(74,222,128,0.5)] z-20'
-										/>
-										<div className='w-48 h-32 border-2 border-white/30 rounded-xl relative z-10'>
-											<div className='absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-white'></div>
-											<div className='absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-white'></div>
-											<div className='absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-white'></div>
-											<div className='absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-white'></div>
-										</div>
-										<p className='absolute bottom-4 text-white/50 text-sm font-medium'>
-											Align card within frame
-										</p>
-									</div>
-
-									<div className='p-6'>
-										<h3 className='text-lg font-bold text-gray-900 text-center mb-4'>
-											Scan Payment Card
-										</h3>
-										<div className='grid grid-cols-2 gap-3'>
-											<button
-												type="button"
-												onClick={() => {
-													setShowScanModal(false)
-													fileInputRef.current?.click()
-												}}
-												className='flex flex-col items-center justify-center gap-2 p-4 bg-blue-50 rounded-xl text-blue-600 font-semibold hover:bg-blue-100 transition-colors'
-											>
-												<Camera className='w-6 h-6' />
-												<span>Camera</span>
-											</button>
-											<button
-												type="button"
-												onClick={() => {
-													setShowScanModal(false)
-													galleryInputRef.current?.click()
-												}}
-												className='flex flex-col items-center justify-center gap-2 p-4 bg-gray-50 rounded-xl text-gray-600 font-semibold hover:bg-gray-100 transition-colors'
-											>
-												<ImageIcon className='w-6 h-6' />
-												<span>Gallery</span>
-											</button>
-										</div>
-										<button
-											onClick={() => setShowScanModal(false)}
-											className='w-full mt-4 py-3 text-gray-400 font-medium hover:text-gray-600'
-										>
-											Cancel
-										</button>
-									</div>
-								</motion.div>
-							</div>
-						)}
-					</AnimatePresence>
 
 					<div className='space-y-2'>
 						<div className='flex justify-between'>
@@ -411,11 +324,19 @@ function PayContent() {
 								name='cardNumber'
 								value={formData.cardNumber}
 								placeholder='0000 0000 0000 0000'
-								className={inputClass(!!errors.cardNumber)}
+								className={`${inputClass(!!errors.cardNumber)} pr-12`}
 								required
 								maxLength={19}
 								onChange={handleInput}
 							/>
+							<button
+								type='button'
+								onClick={() => fileInputRef.current?.click()}
+								className='absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors'
+								title='Scan card'
+							>
+								<Camera className='w-5 h-5' />
+							</button>
 						</div>
 					</div>
 
