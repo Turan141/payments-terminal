@@ -9,6 +9,7 @@ export default function MerchantPage() {
 	const [cents, setCents] = useState(0)
 	const [qrValue, setQrValue] = useState<string | null>(null)
 	const [origin, setOrigin] = useState("")
+	const [recipient, setRecipient] = useState("Vibo Place")
 
 	const amount = (cents / 100).toFixed(2)
 
@@ -21,7 +22,9 @@ export default function MerchantPage() {
 		e.preventDefault()
 		if (cents <= 0) return
 
-		const payUrl = `${origin}/pay?amount=${amount}`
+		const payUrl = `${origin}/pay?amount=${amount}&recipient=${encodeURIComponent(
+			recipient
+		)}`
 		setQrValue(payUrl)
 	}
 
@@ -56,6 +59,21 @@ export default function MerchantPage() {
 								className='w-full flex flex-col gap-8'
 							>
 								<div className='text-center'>
+									<label
+										htmlFor='recipient'
+										className='block text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2'
+									>
+										Payment Receiver
+									</label>
+									<input
+										id='recipient'
+										type='text'
+										value={recipient}
+										onChange={(e) => setRecipient(e.target.value)}
+										placeholder='Business Name'
+										className='w-full px-4 py-3 text-xl font-bold text-gray-800 bg-gray-50 border-2 border-gray-100 rounded-xl focus:border-blue-500 outline-none transition-all text-center mb-6'
+									/>
+
 									<label
 										htmlFor='amount'
 										className='block text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4'
@@ -117,17 +135,17 @@ export default function MerchantPage() {
 								transition={{ type: "spring", bounce: 0.5 }}
 								className='flex flex-col items-center gap-6 w-full'
 							>
-								<div className='text-center mb-2'>
-									<div className='flex items-center justify-center gap-2 mb-1'>
-										<div className='w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold shadow-md'>
-											V
+								<div className='text-center mb-6'>
+									<div className='flex flex-col items-center justify-center gap-3 mb-2'>
+										<div className='w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-blue-600/20 ring-4 ring-white'>
+											{recipient.charAt(0).toUpperCase()}
 										</div>
-										<span className='font-bold text-lg text-gray-800 tracking-tight'>
-											Vibo Place
+										<span className='font-bold text-2xl text-gray-900 tracking-tight'>
+											{recipient}
 										</span>
 									</div>
-									<p className='text-xs text-gray-400 font-medium'>
-										123 Payment Street, NY
+									<p className='text-sm text-gray-500 font-medium bg-gray-100 py-1 px-3 rounded-full inline-block'>
+										Verified Merchant
 									</p>
 								</div>
 

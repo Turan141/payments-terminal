@@ -17,6 +17,7 @@ function PayContent() {
 	const searchParams = useSearchParams()
 	const router = useRouter()
 	const amount = searchParams.get("amount") || "0.00"
+	const recipient = searchParams.get("recipient") || "Merchant"
 	const [isProcessing, setIsProcessing] = useState(false)
 	const [showScanModal, setShowScanModal] = useState(false)
 	const [scanError, setScanError] = useState<string | null>(null)
@@ -179,7 +180,9 @@ function PayContent() {
 		setIsProcessing(true)
 		// Simulate API call
 		await new Promise((resolve) => setTimeout(resolve, 2000))
-		router.push("/status?result=success&amount=" + amount)
+		router.push(
+			`/status?result=success&amount=${amount}&recipient=${encodeURIComponent(recipient)}`
+		)
 	}
 
 	const handlePay = async (e: React.FormEvent) => {
@@ -191,7 +194,9 @@ function PayContent() {
 		// Simulate API call
 		await new Promise((resolve) => setTimeout(resolve, 2000))
 
-		router.push("/status?result=success&amount=" + amount)
+		router.push(
+			`/status?result=success&amount=${amount}&recipient=${encodeURIComponent(recipient)}`
+		)
 	}
 
 	const inputClass = (hasError: boolean) =>
@@ -205,12 +210,27 @@ function PayContent() {
 		<div className='md:max-w-md w-full bg-white md:rounded-3xl rounded-none shadow-2xl overflow-hidden flex flex-col relative animate-fade-in-up h-[100dvh] md:h-auto'>
 			<div className='bg-gray-900 p-8 text-white relative overflow-hidden shrink-0'>
 				<div className='absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-10 -mt-10 blur-2xl'></div>
-				<p className='text-gray-400 text-sm font-medium mb-1 uppercase tracking-wider'>
-					Total to Pay
-				</p>
-				<h1 className='text-5xl font-bold tracking-tighter'>
-					€{parseFloat(amount).toFixed(2)}
-				</h1>
+
+				<div className='mb-6 relative z-10'>
+					<p className='text-gray-400 text-xs font-bold uppercase tracking-wider mb-2'>
+						Payment Receiver
+					</p>
+					<div className='flex items-center gap-3 bg-white/10 p-2 pr-4 rounded-xl w-fit backdrop-blur-sm border border-white/5'>
+						<div className='w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-lg'>
+							{recipient.charAt(0).toUpperCase()}
+						</div>
+						<span className='text-xl font-bold tracking-tight'>{recipient}</span>
+					</div>
+				</div>
+
+				<div className='relative z-10'>
+					<p className='text-gray-400 text-xs font-bold uppercase tracking-wider mb-1'>
+						Total Amount
+					</p>
+					<h1 className='text-5xl font-bold tracking-tighter'>
+						€{parseFloat(amount).toFixed(2)}
+					</h1>
+				</div>
 			</div>
 
 			<form onSubmit={handlePay} className='p-8 flex flex-col gap-6'>

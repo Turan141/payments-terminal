@@ -10,6 +10,7 @@ function StatusContent() {
 	const searchParams = useSearchParams()
 	const result = searchParams.get("result")
 	const amount = searchParams.get("amount")
+	const recipient = searchParams.get("recipient")
 	const isSuccess = result === "success"
 	const [txnRef, setTxnRef] = useState("")
 
@@ -23,7 +24,9 @@ function StatusContent() {
 			try {
 				await navigator.share({
 					title: "Payment Receipt",
-					text: `Payment of $${amount} was ${isSuccess ? "successful" : "failed"}.`,
+					text: `Payment of $${amount} to ${
+						recipient || "Merchant"
+					} was ${isSuccess ? "successful" : "failed"}.`,
 					url: window.location.href
 				})
 			} catch (err) {
@@ -64,6 +67,18 @@ function StatusContent() {
 				<>
 					<p className='text-gray-500 mb-8'>Your transaction has been processed.</p>
 					<div className='bg-gray-50 rounded-2xl p-6 w-full mb-8 border border-gray-100'>
+						<div className='flex items-center gap-3 mb-6 bg-white p-3 rounded-xl border border-gray-100 shadow-sm'>
+							<div className='w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold'>
+								{(recipient || "Merchant").charAt(0).toUpperCase()}
+							</div>
+							<div className='text-left'>
+								<p className='text-xs text-gray-400 font-bold uppercase tracking-wider'>
+									Paid to
+								</p>
+								<p className='text-gray-900 font-bold'>{recipient || "Merchant"}</p>
+							</div>
+						</div>
+
 						<p className='text-gray-400 text-xs font-bold uppercase tracking-wider mb-1'>
 							Amount Paid
 						</p>
