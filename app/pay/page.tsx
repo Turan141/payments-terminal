@@ -1,8 +1,8 @@
 "use client"
 
-import { Suspense, useState } from "react"
+import { Suspense, useState, useRef } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { CreditCard, Calendar, Lock, ArrowRight } from "lucide-react"
+import { CreditCard, Calendar, Lock, ArrowRight, Camera, Image as ImageIcon } from "lucide-react"
 import { motion } from "framer-motion"
 
 function PayContent() {
@@ -10,19 +10,19 @@ function PayContent() {
 	const router = useRouter()
 	const amount = searchParams.get("amount") || "0.00"
 	const [isProcessing, setIsProcessing] = useState(false)
+	const fileInputRef = useRef<HTMLInputElement>(null)
+	const galleryInputRef = useRef<HTMLInputElement>(null)
 
 	const [formData, setFormData] = useState({
 		cardNumber: "",
 		expiry: "",
-		cvv: "",
-		name: ""
+		cvv: ""
 	})
 
 	const [errors, setErrors] = useState({
 		cardNumber: "",
 		expiry: "",
-		cvv: "",
-		name: ""
+		cvv: ""
 	})
 
 	const formatCardNumber = (value: string) => {
@@ -40,6 +40,53 @@ function PayContent() {
 			return v.substring(0, 2) + "/" + v.substring(2, 4)
 		}
 		return v
+	}
+
+	const handleScan = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0]
+		if (!file) return
+
+		setIsProcessing(true)
+		try {
+			const reader = new FileReader()
+			reader.onloadend = async () => {
+				const base64 = reader.result?.toString()
+				if (!base64) return
+
+				try {
+					const res = await fetch("https://demo.vibo.tips/api/terminal/bill/recognize", {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+							Authorization:
+								"Basic: 56d3b2c2f25b74b2229c625c2904b3ac99345c0f049ca23e4cc18df52d7"
+						},
+						body: JSON.stringify({
+							file: base64,
+							model: "gemini"
+						})
+					})
+					const { data } = await res.json()
+
+					if (data?.card) {
+						setFormData((prev) => ({
+							...prev,
+							cardNumber: data.card.number
+								? formatCardNumber(data.card.number)
+								: prev.cardNumber,
+							expiry: data.card.expDate ? formatExpiry(data.card.expDate) : prev.expiry
+						}))
+					}
+				} catch (err) {
+					console.error("Scan error", err)
+				} finally {
+					setIsProcessing(false)
+				}
+			}
+			reader.readAsDataURL(file)
+		} catch (error) {
+			setIsProcessing(false)
+		}
 	}
 
 	const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -66,8 +113,7 @@ function PayContent() {
 		const newErrors = {
 			cardNumber: "",
 			expiry: "",
-			cvv: "",
-			name: ""
+			cvv: ""
 		}
 
 		if (formData.cardNumber.replace(/\s/g, "").length < 16) {
@@ -95,11 +141,6 @@ function PayContent() {
 
 		if (formData.cvv.length < 3) {
 			newErrors.cvv = "Invalid CVV"
-			isValid = false
-		}
-
-		if (!formData.name.trim()) {
-			newErrors.name = "Name required"
 			isValid = false
 		}
 
@@ -141,7 +182,7 @@ function PayContent() {
 					Total to Pay
 				</p>
 				<h1 className='text-5xl font-bold tracking-tighter'>
-					${parseFloat(amount).toFixed(2)}
+					€{parseFloat(amount).toFixed(2)}
 				</h1>
 			</div>
 
@@ -197,6 +238,43 @@ function PayContent() {
 				</div>
 
 				<div className='space-y-4'>
+					{/* Camera Input */}
+					<input
+						type='file'
+						ref={fileInputRef}
+						className='hidden'
+						accept='image/*'
+						capture='environment'
+						onChange={handleScan}
+					/>
+					{/* Gallery Input */}
+					<input
+						type='file'
+						ref={galleryInputRef}
+						className='hidden'
+						accept='image/*'
+						onChange={handleScan}
+					/>
+
+					<div className='grid grid-cols-2 gap-3'>
+						<button
+							type='button'
+							onClick={() => fileInputRef.current?.click()}
+							className='flex(1) flex items-center justify-center gap-2 bg-blue-50 text-blue-600 font-bold py-3 rounded-xl hover:bg-blue-100 transition-colors border border-blue-100'
+						>
+							<Camera className='w-5 h-5' />
+							Camera
+						</button>
+						<button
+							type='button'
+							onClick={() => galleryInputRef.current?.click()}
+							className='flex(1) flex items-center justify-center gap-2 bg-gray-50 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-100 transition-colors border border-gray-200'
+						>
+							<ImageIcon className='w-5 h-5' />
+							Gallery
+						</button>
+					</div>
+
 					<div className='space-y-2'>
 						<div className='flex justify-between'>
 							<label className='text-xs font-bold text-gray-500 uppercase tracking-wider'>
@@ -284,30 +362,6 @@ function PayContent() {
 								/>
 							</div>
 						</div>
-					</div>
-
-					<div className='space-y-2'>
-						<div className='flex justify-between'>
-							<label className='text-xs font-bold text-gray-500 uppercase tracking-wider'>
-								Cardholder Name
-							</label>
-							{errors.name && (
-								<span className='text-xs text-red-500 font-medium'>{errors.name}</span>
-							)}
-						</div>
-						<input
-							type='text'
-							name='name'
-							value={formData.name}
-							placeholder='JOHN DOE'
-							className={`w-full px-4 py-3 bg-gray-100 border rounded-xl focus:ring-2 focus:bg-white outline-none transition-all uppercase text-gray-900 placeholder:text-gray-400 ${
-								errors.name
-									? "border-red-300 focus:ring-red-200 focus:border-red-500 bg-red-50"
-									: "border-gray-200 focus:ring-blue-500 hover:bg-gray-50"
-							}`}
-							required
-							onChange={handleInput}
-						/>
 					</div>
 				</div>
 

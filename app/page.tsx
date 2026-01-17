@@ -2,13 +2,15 @@
 
 import { useState, useEffect } from "react"
 import { QRCodeSVG } from "qrcode.react"
-import { ScanLine, ChevronRight, DollarSign } from "lucide-react"
+import { ScanLine, ChevronRight, Euro } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
 export default function MerchantPage() {
-	const [amount, setAmount] = useState("")
+	const [cents, setCents] = useState(0)
 	const [qrValue, setQrValue] = useState<string | null>(null)
 	const [origin, setOrigin] = useState("")
+
+	const amount = (cents / 100).toFixed(2)
 
 	useEffect(() => {
 		const handleSetOrigin = (url: string) => setOrigin(url)
@@ -17,14 +19,14 @@ export default function MerchantPage() {
 
 	const handleGenerate = (e: React.FormEvent) => {
 		e.preventDefault()
-		if (!amount || parseFloat(amount) <= 0) return
+		if (cents <= 0) return
 
 		const payUrl = `${origin}/pay?amount=${amount}`
 		setQrValue(payUrl)
 	}
 
 	const handleNewPayment = () => {
-		setAmount("")
+		setCents(0)
 		setQrValue(null)
 	}
 
@@ -61,15 +63,35 @@ export default function MerchantPage() {
 										Enter Amount
 									</label>
 									<div className='relative group'>
-										<DollarSign className='absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 w-8 h-8 group-focus-within:text-blue-500 transition-colors' />
+										<Euro className='absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 w-8 h-8 group-focus-within:text-blue-500 transition-colors' />
 										<input
 											id='amount'
-											type='number'
+											type='text'
+											inputMode='numeric'
 											value={amount}
-											onChange={(e) => setAmount(e.target.value)}
+											onKeyDown={(e) => {
+												if (
+													!/^[0-9]$/.test(e.key) &&
+													e.key !== "Backspace" &&
+													e.key !== "Tab" &&
+													e.key !== "Enter" &&
+													!e.metaKey &&
+													!e.ctrlKey
+												) {
+													e.preventDefault()
+												}
+
+												if (/^[0-9]$/.test(e.key)) {
+													e.preventDefault()
+													setCents((prev) => prev * 10 + parseInt(e.key))
+												} else if (e.key === "Backspace") {
+													e.preventDefault()
+													setCents((prev) => Math.floor(prev / 10))
+												}
+											}}
+											onChange={() => {}} // Controlled by onKeyDown
 											placeholder='0.00'
-											step='0.01'
-											className='w-full pl-14 pr-4 py-5 text-5xl font-bold text-gray-800 bg-transparent border-b-2 border-gray-200 focus:border-blue-500 outline-none transition-all placeholder:text-gray-200 text-center'
+											className='w-full pl-14 pr-4 py-5 text-5xl font-bold text-gray-800 bg-transparent border-b-2 border-gray-200 focus:border-blue-500 outline-none transition-all placeholder:text-gray-200 text-center caret-transparent cursor-pointer selection:bg-transparent'
 											autoFocus
 										/>
 									</div>
@@ -79,7 +101,7 @@ export default function MerchantPage() {
 									whileHover={{ scale: 1.02 }}
 									whileTap={{ scale: 0.98 }}
 									type='submit'
-									disabled={!amount}
+									disabled={cents <= 0}
 									className='w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed text-white text-lg font-bold py-4 rounded-2xl transition-all shadow-xl shadow-blue-600/20 flex items-center justify-center gap-3 mt-4'
 								>
 									Generate QR
@@ -95,12 +117,26 @@ export default function MerchantPage() {
 								transition={{ type: "spring", bounce: 0.5 }}
 								className='flex flex-col items-center gap-6 w-full'
 							>
+								<div className='text-center mb-2'>
+									<div className='flex items-center justify-center gap-2 mb-1'>
+										<div className='w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold shadow-md'>
+											V
+										</div>
+										<span className='font-bold text-lg text-gray-800 tracking-tight'>
+											Vibo Place
+										</span>
+									</div>
+									<p className='text-xs text-gray-400 font-medium'>
+										123 Payment Street, NY
+									</p>
+								</div>
+
 								<div className='text-center space-y-1'>
 									<p className='text-gray-400 text-xs font-bold uppercase tracking-wider'>
 										Payment Amount
 									</p>
 									<p className='text-5xl font-bold text-gray-900 tracking-tighter'>
-										${parseFloat(amount).toFixed(2)}
+										€{amount}
 									</p>
 								</div>
 
