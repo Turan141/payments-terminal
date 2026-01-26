@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { QRCodeSVG } from "qrcode.react"
 import { ScanLine, ChevronRight, Euro } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -9,14 +10,30 @@ export default function MerchantPage() {
 	const [cents, setCents] = useState(0)
 	const [qrValue, setQrValue] = useState<string | null>(null)
 	const [origin, setOrigin] = useState("")
+	const [isCheckingAuth, setIsCheckingAuth] = useState(true)
 	const recipient = "Vibo Place"
+	const router = useRouter()
 
 	const amount = (cents / 100).toFixed(2)
 
 	useEffect(() => {
+		const isAuthenticated = localStorage.getItem("isAuthenticated")
+		if (!isAuthenticated) {
+			router.push("/login")
+		} else {
+			setIsCheckingAuth(false)
+		}
+	}, [router])
+
+	useEffect(() => {
+		if (isCheckingAuth) return
 		const handleSetOrigin = (url: string) => setOrigin(url)
 		handleSetOrigin(window.location.origin)
-	}, [])
+	}, [isCheckingAuth])
+
+	if (isCheckingAuth) {
+		return null // Or a loading spinner
+	}
 
 	const handleGenerate = (e: React.FormEvent) => {
 		e.preventDefault()
@@ -35,7 +52,7 @@ export default function MerchantPage() {
 
 	return (
 		<main className='min-h-screen bg-gray-50 flex flex-col items-center justify-center md:p-4 p-0 font-sans text-gray-900'>
-			<div className='md:max-w-md w-full bg-white md:rounded-3xl rounded-none shadow-xl overflow-hidden h-[100dvh] md:h-auto md:min-h-[600px] flex flex-col relative'>
+			<div className='md:max-w-md w-full bg-white md:rounded-3xl rounded-none shadow-xl overflow-hidden min-h-[100dvh] md:h-auto md:min-h-[600px] flex flex-col relative'>
 				<div className='bg-blue-600 p-6 text-white text-center shadow-lg z-10'>
 					<h1 className='text-xl font-bold flex items-center justify-center gap-2 tracking-tight'>
 						<ScanLine className='w-6 h-6' />
@@ -155,7 +172,7 @@ export default function MerchantPage() {
 								<div
 									className='bg-white p-6 rounded-3xl shadow-xl border border-gray-100 cursor-pointer hover:scale-105 transition-transform duration-300 relative group'
 									onClick={() => window.open(qrValue, "_blank")}
-									title='Click to simulate scan'
+									title='Click to simulate completion'
 								>
 									<div className='absolute inset-0 rounded-3xl border-2 border-dashed border-blue-200 group-hover:border-blue-500 transition-colors pointer-events-none' />
 									<QRCodeSVG
