@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { QRCodeSVG } from "qrcode.react"
-import { ScanLine, ChevronRight, Euro } from "lucide-react"
+import { ScanLine, ChevronRight, Euro, Loader2, CheckCircle2 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
 export default function MerchantPage() {
@@ -11,17 +11,21 @@ export default function MerchantPage() {
 	const [qrValue, setQrValue] = useState<string | null>(null)
 	const [origin, setOrigin] = useState("")
 	const [isCheckingAuth, setIsCheckingAuth] = useState(true)
+	const [txnStatus, setTxnStatus] = useState<"idle" | "processing" | "success">("idle")
+	const [statusMessage, setStatusMessage] = useState("")
 	const recipient = "Vibo Place"
 	const router = useRouter()
 
 	const amount = (cents / 100).toFixed(2)
 
 	useEffect(() => {
+		const setupAuth = () => setIsCheckingAuth(false)
 		const isAuthenticated = localStorage.getItem("isAuthenticated")
+
 		if (!isAuthenticated) {
 			router.push("/login")
 		} else {
-			setIsCheckingAuth(false)
+			setupAuth()
 		}
 	}, [router])
 
@@ -43,11 +47,29 @@ export default function MerchantPage() {
 			recipient
 		)}`
 		setQrValue(payUrl)
+		setTxnStatus("idle")
 	}
 
 	const handleNewPayment = () => {
 		setCents(0)
 		setQrValue(null)
+		setTxnStatus("idle")
+	}
+
+	const simulateTransaction = async () => {
+		if (qrValue) {
+			window.open(qrValue, "_blank")
+		}
+
+		setTxnStatus("processing")
+		setStatusMessage("Device connected...")
+		await new Promise((r) => setTimeout(r, 1000))
+		setStatusMessage("Processing payment...")
+		await new Promise((r) => setTimeout(r, 1500))
+		setStatusMessage("Verifying funds...")
+		await new Promise((r) => setTimeout(r, 1000))
+		setTxnStatus("success")
+		setStatusMessage("Approved!")
 	}
 
 	return (
@@ -170,32 +192,104 @@ export default function MerchantPage() {
 								</div>
 
 								<div
-									className='bg-white p-6 rounded-3xl shadow-xl border border-gray-100 cursor-pointer hover:scale-105 transition-transform duration-300 relative group'
-									onClick={() => window.open(qrValue, "_blank")}
-									title='Click to simulate completion'
+									className={`transition-all duration-300 relative group min-h-[300px] flex items-center justify-center ${
+										txnStatus === "idle"
+											? "w-fit bg-white p-6 rounded-3xl border border-gray-100 cursor-pointer hover:scale-105"
+											: "w-full"
+									}`}
+									onClick={txnStatus === "idle" ? simulateTransaction : undefined}
+									title='Click to simulate scan'
 								>
-									<div className='absolute inset-0 rounded-3xl border-2 border-dashed border-blue-200 group-hover:border-blue-500 transition-colors pointer-events-none' />
-									<QRCodeSVG
-										value={qrValue}
-										size={220}
-										level='H'
-										className='w-full h-auto relative z-10'
-									/>
-									<div className='absolute -bottom-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg whitespace-nowrap z-20'>
-										Scan to Pay
-									</div>
+									<AnimatePresence mode='wait'>
+										{txnStatus === "idle" && (
+											<motion.div
+												key='qr'
+												initial={{ opacity: 0 }}
+												animate={{ opacity: 1 }}
+												exit={{ opacity: 0 }}
+												className='flex flex-col items-center justify-center w-full relative'
+											>
+												<div className='absolute inset-0 -m-6 rounded-3xl border-2 border-dashed border-blue-200 group-hover:border-blue-500 transition-colors pointer-events-none' />
+												<QRCodeSVG
+													value={qrValue || ""}
+													size={220}
+													level='H'
+													className='relative z-10'
+												/>
+												<div className='absolute -bottom-10 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg whitespace-nowrap z-20'>
+													Scan to Pay
+												</div>
+											</motion.div>
+										)}
+
+										{txnStatus === "processing" && (
+											<motion.div
+												key='processing'
+												initial={{ opacity: 0, scale: 0.8 }}
+												animate={{ opacity: 1, scale: 1 }}
+												exit={{ opacity: 0, scale: 0.8 }}
+												className='flex flex-col items-center gap-4 py-8'
+											>
+												<div className='relative'>
+													<div className='absolute inset-0 bg-blue-100 rounded-full animate-ping opacity-75' />
+													<div className='relative bg-white p-4 rounded-full shadow-sm border border-blue-100'>
+														<Loader2 className='w-12 h-12 text-blue-600 animate-spin' />
+													</div>
+												</div>
+												<div className='text-center space-y-1'>
+													<p className='font-bold text-lg text-gray-800'>Processing</p>
+													<p className='text-sm text-gray-500 animate-pulse'>
+														{statusMessage}
+													</p>
+												</div>
+											</motion.div>
+										)}
+
+										{txnStatus === "success" && (
+											<motion.div
+												key='success'
+												initial={{ opacity: 0, scale: 0.8 }}
+												animate={{ opacity: 1, scale: 1 }}
+												exit={{ opacity: 0, scale: 0.8 }}
+												className='flex flex-col items-center gap-4 py-8 w-full'
+											>
+												<div className='bg-green-100 p-6 rounded-full'>
+													<CheckCircle2 className='w-16 h-16 text-green-600' />
+												</div>
+												<div className='text-center space-y-2'>
+													<p className='font-bold text-2xl text-gray-800'>
+														{statusMessage}
+													</p>
+													<p className='text-gray-500'>Payment received successfully</p>
+												</div>
+												<motion.button
+													initial={{ opacity: 0, y: 10 }}
+													animate={{ opacity: 1, y: 0 }}
+													transition={{ delay: 0.2 }}
+													onClick={handleNewPayment}
+													className='mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-blue-600/20 transition-all flex items-center gap-2'
+												>
+													New Payment
+												</motion.button>
+											</motion.div>
+										)}
+									</AnimatePresence>
 								</div>
 
-								<p className='text-gray-400 text-sm text-center font-medium max-w-[200px] leading-relaxed'>
-									Scan to pay securely via credit card
-								</p>
+								{txnStatus === "idle" && (
+									<p className='text-gray-400 text-sm text-center font-medium max-w-[200px] leading-relaxed'>
+										Scan to pay securely via credit card
+									</p>
+								)}
 
-								<button
-									onClick={handleNewPayment}
-									className='mt-6 text-sm text-blue-600 font-bold hover:text-blue-700 hover:bg-blue-50 px-6 py-2 rounded-full transition-colors'
-								>
-									Cancel / New Payment
-								</button>
+								{txnStatus !== "success" && (
+									<button
+										onClick={handleNewPayment}
+										className='mt-6 text-sm text-blue-600 font-bold hover:text-blue-700 hover:bg-blue-50 px-6 py-2 rounded-full transition-colors'
+									>
+										Cancel / New Payment
+									</button>
+								)}
 							</motion.div>
 						)}
 					</AnimatePresence>
