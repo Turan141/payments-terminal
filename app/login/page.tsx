@@ -6,8 +6,8 @@ import { ScanLine, LogIn, Lock, Mail } from "lucide-react"
 import { motion } from "framer-motion"
 
 export default function LoginPage() {
-	const [email, setEmail] = useState("")
-	const [password, setPassword] = useState("")
+	const [email, setEmail] = useState("merchant@viboplace.com")
+	const [password, setPassword] = useState("password123")
 	const [isLoading, setIsLoading] = useState(false)
 	const router = useRouter()
 
