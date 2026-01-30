@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, useState, useRef } from "react"
+import { Suspense, useState, useRef, useEffect } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import {
 	CreditCard,
@@ -12,15 +12,31 @@ import {
 	X
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
+import { api } from "@/lib/api"
 
 function PayContent() {
 	const searchParams = useSearchParams()
 	const router = useRouter()
-	const amount = searchParams.get("amount") || "0.00"
-	const recipient = searchParams.get("recipient") || "Merchant"
+	const paymentId = searchParams.get("paymentId")
+	const [amount, setAmount] = useState(searchParams.get("amount") || "0.00")
+	const [recipient, setRecipient] = useState(searchParams.get("recipient") || "Merchant")
 	const [isProcessing, setIsProcessing] = useState(false)
 	const [scanError, setScanError] = useState<string | null>(null)
 	const fileInputRef = useRef<HTMLInputElement>(null)
+
+	useEffect(() => {
+		if (paymentId) {
+			api
+				.get<any>(`/payment/${paymentId}`)
+				.then((data) => {
+					if (data?.data) {
+						if (data.data.amount) setAmount(data.data.amount.toString())
+						if (data.data.merchantName) setRecipient(data.data.merchantName)
+					}
+				})
+				.catch((err) => console.error("Failed to load payment info", err))
+		}
+	}, [paymentId])
 
 	const [formData, setFormData] = useState({
 		cardNumber: "",
@@ -68,24 +84,20 @@ function PayContent() {
 				}
 
 				try {
-					const res = await fetch("https://demo.vibo.tips/api/terminal/bill/recognize", {
-						method: "POST",
-						headers: {
-							"Content-Type": "application/json",
-							Authorization:
-								"Basic: 56d3b2c2f25b74b2229c625c2904b3ac99345c0f049ca23e4cc18df52d7"
-						},
-						body: JSON.stringify({
+					const { data } = await api.post<any>(
+						"/terminal/bill/recognize",
+						{
 							file: base64,
 							model: "gemini"
-						})
-					})
+						},
+						{
+							headers: {
+								Authorization:
+									"Basic: 56d3b2c2f25b74b2229c625c2904b3ac99345c0f049ca23e4cc18df52d7"
+							}
+						}
+					)
 
-					if (!res.ok) {
-						throw new Error(`API error: ${res.status}`)
-					}
-
-					const { data } = await res.json()
 					console.log("Scan result:", data)
 
 					if (data?.card?.number) {

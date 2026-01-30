@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { QRCodeSVG } from "qrcode.react"
 import { ScanLine, ChevronRight, Euro, Loader2, CheckCircle2 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
+import { api } from "@/lib/api"
 
 export default function MerchantPage() {
 	const [cents, setCents] = useState(0)
@@ -39,15 +40,35 @@ export default function MerchantPage() {
 		return null // Or a loading spinner
 	}
 
-	const handleGenerate = (e: React.FormEvent) => {
+	const handleGenerate = async (e: React.FormEvent) => {
 		e.preventDefault()
 		if (cents <= 0) return
 
-		const payUrl = `${origin}/pay?amount=${amount}&recipient=${encodeURIComponent(
-			recipient
-		)}`
-		setQrValue(payUrl)
-		setTxnStatus("idle")
+		const authToken = localStorage.getItem("authToken")
+		if (!authToken) {
+			router.push("/login")
+			return
+		}
+
+		try {
+			const data = await api.post<{ data: { paymentId: number } }>(
+				"/payment/init",
+				{},
+				{
+					params: { amount, currency: "EUR" },
+					token: authToken
+				}
+			)
+
+			if (data?.data?.paymentId) {
+				const payUrl = `${origin}/pay?paymentId=${data.data.paymentId}`
+				setQrValue(payUrl)
+				setTxnStatus("idle")
+			}
+		} catch (error) {
+			console.error("Payment init error", error)
+			alert("Failed to create payment")
+		}
 	}
 
 	const handleNewPayment = () => {

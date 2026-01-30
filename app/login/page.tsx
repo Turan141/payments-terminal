@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { ScanLine, LogIn, Lock, Mail } from "lucide-react"
 import { motion } from "framer-motion"
+import { api } from "@/lib/api"
 
 export default function LoginPage() {
 	const [email, setEmail] = useState("merchant@viboplace.com")
@@ -15,12 +16,28 @@ export default function LoginPage() {
 		e.preventDefault()
 		setIsLoading(true)
 
-		// Simulate API call
-		await new Promise((resolve) => setTimeout(resolve, 1000))
+		try {
+			const data = await api.post<{ data: { authToken: string } }>(
+				"/merchant/login",
+				{},
+				{
+					params: { email, password }
+				}
+			)
 
-		// Mock successful login
-		localStorage.setItem("isAuthenticated", "true")
-		router.push("/")
+			if (data?.data?.authToken) {
+				localStorage.setItem("authToken", data.data.authToken)
+				localStorage.setItem("isAuthenticated", "true")
+				router.push("/")
+			} else {
+				throw new Error("Invalid response")
+			}
+		} catch (error) {
+			console.error("Login error", error)
+			alert("Login failed")
+		} finally {
+			setIsLoading(false)
+		}
 	}
 
 	return (
